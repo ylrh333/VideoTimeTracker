@@ -38,8 +38,25 @@ workflows:
           echo "Listing files"
           ls -la
           ls -la gradle/wrapper/
+      - name: Check Project Structure
+        script: |
+          echo "=== Project Root ==="
+          ls -la
+          
+          echo "=== App Directory ==="
+          ls -la app/
+          
+          echo "=== Build Gradle ==="
+          cat build.gradle
+          
+          echo "=== App Build Gradle ==="
+          cat app/build.gradle
+          
+          echo "=== Settings Gradle ==="
+          cat settings.gradle
       - name: Build debug APK
         script: |
-          ./gradlew assembleDebug --stacktrace --info
+          echo "Attempting build with full verbosity"
+          ./gradlew assembleDebug --stacktrace --info --debug --scan
     artifacts:
       - app/build/outputs/apk/debug/*.apk 
