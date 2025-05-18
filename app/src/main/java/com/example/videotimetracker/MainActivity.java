@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         // 启动监控服务
         startService(new Intent(this, MonitoringService.class));
         
-        // 加载HTML原型
+        // 加载HTML原型 - 修正路径
         webView.loadUrl("file:///android_asset/src/index.html");
     }
     
@@ -113,9 +113,8 @@ public class MainActivity extends AppCompatActivity {
                 // 关注的短视频应用列表及其包名
                 String[][] videoApps = {
                         {"抖音", "抖", "com.ss.android.ugc.aweme"},
-                        {"快手", "快", "com.smile.gifmaker"},
-                        {"哔哩哔哩", "B", "tv.danmaku.bili"},
-                        {"西瓜视频", "西", "com.ss.android.article.video"}
+                        {"快手", "快", "com.kuaishou.nebula"},
+                        {"哔哩哔哩", "B", "tv.danmaku.bili"}
                 };
                 
                 int totalUsageMinutes = 0;

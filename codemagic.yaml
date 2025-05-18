@@ -10,34 +10,32 @@ workflows:
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
       - name: Create complete Gradle Wrapper
         script: |
-          echo "Removing existing Gradle wrapper files"
-          rm -f ./gradlew
-          rm -rf ./gradle
-          
-          echo "Creating new Gradle wrapper"
-          mkdir -p gradle/wrapper
-          
-          echo "Downloading Gradle Wrapper JAR"
-          curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradle/wrapper/gradle-wrapper.jar
-          
-          echo "Creating gradle-wrapper.properties"
-          cat > gradle/wrapper/gradle-wrapper.properties << EOF
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-7.0.2-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          EOF
-          
-          echo "Creating gradlew script"
-          curl -L -o gradlew https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradlew
-          
-          echo "Making gradlew executable"
-          chmod +x ./gradlew
-          
-          echo "Listing files"
-          ls -la
-          ls -la gradle/wrapper/
+          echo "Checking if Gradle wrapper exists"
+          if [ ! -f ./gradlew ] || [ ! -d ./gradle ]; then
+            echo "Creating new Gradle wrapper"
+            mkdir -p gradle/wrapper
+            
+            echo "Downloading Gradle Wrapper JAR"
+            curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradle/wrapper/gradle-wrapper.jar
+            
+            echo "Creating gradle-wrapper.properties"
+            cat > gradle/wrapper/gradle-wrapper.properties << EOF
+            distributionBase=GRADLE_USER_HOME
+            distributionPath=wrapper/dists
+            distributionUrl=https\://services.gradle.org/distributions/gradle-7.0.2-bin.zip
+            zipStoreBase=GRADLE_USER_HOME
+            zipStorePath=wrapper/dists
+            EOF
+            
+            echo "Creating gradlew script"
+            curl -L -o gradlew https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradlew
+            
+            echo "Making gradlew executable"
+            chmod +x ./gradlew
+          else
+            echo "Gradle wrapper already exists"
+            chmod +x ./gradlew
+          fi
       - name: Check Project Structure
         script: |
           echo "=== Project Root ==="
@@ -68,42 +66,125 @@ workflows:
           cat app/src/main/AndroidManifest.xml
       - name: Fix app structure if needed
         script: |
+          # Clean up any misplaced files in src directory
+          if [ -f app/src/MainActivity.java ]; then
+            mkdir -p app/src/main/java/com/example/videotimetracker
+            mv app/src/MainActivity.java app/src/main/java/com/example/videotimetracker/
+          fi
+          
+          if [ -f app/src/MonitoringService.java ]; then
+            mkdir -p app/src/main/java/com/example/videotimetracker
+            mv app/src/MonitoringService.java app/src/main/java/com/example/videotimetracker/
+          fi
+          
+          if [ -f app/src/AndroidManifest.xml ]; then
+            mkdir -p app/src/main
+            mv app/src/AndroidManifest.xml app/src/main/
+          fi
+          
+          if [ -f app/src/activity_main.xml ]; then
+            mkdir -p app/src/main/res/layout
+            mv app/src/activity_main.xml app/src/main/res/layout/
+          fi
+          
+          # Move web assets to assets folder
+          if [ -f app/src/index.html ]; then
+            mkdir -p app/src/main/assets/src
+            mv app/src/index.html app/src/main/assets/src/
+          fi
+          
+          if [ -f app/src/app.js ]; then
+            mkdir -p app/src/main/assets/src
+            mv app/src/app.js app/src/main/assets/src/
+          fi
+          
           # Ensure required directories exist
           mkdir -p app/src/main/java/com/example/videotimetracker
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/mipmap-hdpi
+          mkdir -p app/src/main/res/mipmap-mdpi
+          mkdir -p app/src/main/res/mipmap-xhdpi
+          mkdir -p app/src/main/res/mipmap-xxhdpi
+          mkdir -p app/src/main/res/mipmap-xxxhdpi
           
-          # Check if manifest exists, create if not
-          if [ ! -f app/src/main/AndroidManifest.xml ]; then
-            echo "Creating minimal AndroidManifest.xml"
-            cat > app/src/main/AndroidManifest.xml << EOF
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.example.videotimetracker">
-              <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
-              <application
-                  android:allowBackup="true"
-                  android:label="VideoTimeTracker"
-                  android:supportsRtl="true">
-                  <activity android:name=".MainActivity" android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
+          # Create launcher icons if they don't exist
+          if [ ! -f app/src/main/res/mipmap-hdpi/ic_launcher.png ]; then
+            echo "Creating launcher icons"
+            # Create a simple placeholder icon for each density
+            for density in hdpi mdpi xhdpi xxhdpi xxxhdpi; do
+              # Download a sample icon
+              curl -L -o app/src/main/res/mipmap-$density/ic_launcher.png https://raw.githubusercontent.com/google/material-design-icons/master/png/action/build/materialicons/48dp/2x/baseline_build_black_48dp.png
+              # Also create rounded version
+              cp app/src/main/res/mipmap-$density/ic_launcher.png app/src/main/res/mipmap-$density/ic_launcher_round.png
+            done
+          fi
+          
+          # Check if styles.xml exists, create if not
+          if [ ! -f app/src/main/res/values/styles.xml ]; then
+            echo "Creating styles.xml"
+            cat > app/src/main/res/values/styles.xml << EOF
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.VideoTimeTracker" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+</resources>
+EOF
+          fi
+          
+          # Check if colors.xml exists, create if not
+          if [ ! -f app/src/main/res/values/colors.xml ]; then
+            echo "Creating colors.xml"
+            cat > app/src/main/res/values/colors.xml << EOF
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>
+EOF
+          fi
+          
+          # Check if strings.xml exists, create if not
+          if [ ! -f app/src/main/res/values/strings.xml ]; then
+            echo "Creating strings.xml"
+            cat > app/src/main/res/values/strings.xml << EOF
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">短视频使用时长监控</string>
+    <string name="permission_required">需要使用情况访问权限</string>
+    <string name="permission_explanation">此应用需要访问使用情况权限来监控短视频应用的使用时长，请在设置中授予此权限。</string>
+    <string name="go_to_settings">前往设置</string>
+    <string name="permission_denied">权限被拒绝，应用功能将受限</string>
+    <string name="daily_usage">今日使用时长</string>
+    <string name="daily_limit">每日限制</string>
+    <string name="app_usage">应用使用情况</string>
+    <string name="set_time_limit">设置时间限制</string>
+    <string name="hours">小时</string>
+    <string name="save_settings">保存设置</string>
+    <string name="reset_stats">重置统计数据</string>
+    <string name="home">首页</string>
+    <string name="stats">统计</string>
+    <string name="settings">设置</string>
+    <string name="time_limit_saved">设置已保存</string>
+    <string name="invalid_time_limit">请输入有效的时间限制</string>
+    <string name="confirm_reset">确定要重置所有统计数据吗？</string>
+</resources>
+EOF
           fi
       - name: Build debug APK
         script: |
           echo "Attempting build with logging"
-          # Try to build with a clean first
           ./gradlew clean
-          ./gradlew assembleDebug --stacktrace --info || true
+          ./gradlew assembleDebug --stacktrace --info
           
           # Show build reports
           echo "===== BUILD REPORTS ====="
           find app/build/reports -name "*.html" -exec cat {} \;
     artifacts:
-      - app/build/outputs/apk/debug/*.apk 
+      - app/build/outputs/apk/debug/*.apk
