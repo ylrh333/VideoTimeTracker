@@ -8,38 +8,68 @@ workflows:
     scripts:
       - name: Set up local properties
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
-      - name: Create complete Gradle Wrapper
+      - name: Fix Gradle Wrapper for Mac OS
         script: |
-          echo "Checking if Gradle wrapper exists"
-          if [ ! -f ./gradlew ] || [ ! -d ./gradle ]; then
-            echo "Creating new Gradle wrapper from scratch"
-            mkdir -p gradle/wrapper
-            
-            echo "Downloading Gradle distribution"
-            curl -L -o gradle.zip "https://services.gradle.org/distributions/gradle-8.5-bin.zip"
-            
-            echo "Extracting Gradle to create proper wrapper"
-            mkdir -p temp_gradle
-            unzip -q gradle.zip -d temp_gradle
-            
-            cd temp_gradle/gradle-8.5
-            ./bin/gradle wrapper --gradle-version 8.5
-            
-            cd ../..
-            cp -r temp_gradle/gradle-8.5/gradle/wrapper/* gradle/wrapper/
-            cp temp_gradle/gradle-8.5/gradlew .
-            
-            rm -rf temp_gradle
-            rm gradle.zip
-            
-            echo "Setting proper permissions"
+          echo "检查并修复Gradle包装器格式问题"
+          # 检查gradlew文件编码和格式
+          file ./gradlew
+          
+          # 如果gradlew文件存在但无法执行，则创建新的Unix格式版本
+          if [ -f ./gradlew ]; then
+            echo "检测到现有gradlew文件，转换为Unix格式"
+            # 将文件内容转换为ASCII/UTF-8格式，并使用LF作为行结束符
+            tr -d '\r' < ./gradlew > ./gradlew.unix
+            mv ./gradlew.unix ./gradlew
             chmod +x ./gradlew
+            
+            # 验证文件格式
+            file ./gradlew
             ls -la ./gradlew
           else
-            echo "Gradle wrapper already exists, ensuring proper permissions"
-            chmod +x ./gradlew
-            ls -la ./gradlew
+            echo "未找到gradlew文件，需要下载完整的Gradle"
           fi
+      - name: Create complete Gradle Wrapper
+        script: |
+          echo "确保Gradle包装器正确创建"
+          
+          # 无论现有文件如何，都下载完整的Gradle发行版并创建新的包装器
+          echo "下载完整的Gradle发行版"
+          curl -L -o gradle.zip "https://services.gradle.org/distributions/gradle-4.2.2-bin.zip"
+          
+          echo "解压Gradle并创建包装器"
+          mkdir -p temp_gradle
+          unzip -q gradle.zip -d temp_gradle
+          
+          # 在macOS上使用绝对路径
+          GRADLE_BIN_PATH="$PWD/temp_gradle/gradle-4.2.2/bin/gradle"
+          chmod +x $GRADLE_BIN_PATH
+          
+          # 确保bin目录中的所有文件都可执行
+          chmod -R +x temp_gradle/gradle-4.2.2/bin
+          
+          echo "使用下载的Gradle版本生成包装器"
+          cd temp_gradle/gradle-4.2.2
+          ./bin/gradle wrapper --gradle-version 4.2.2
+          
+          echo "复制生成的包装器到项目目录"
+          cd ../../
+          rm -f ./gradlew
+          rm -f ./gradlew.bat
+          rm -rf ./gradle
+          
+          mkdir -p gradle/wrapper
+          cp -r temp_gradle/gradle-4.2.2/gradle/wrapper/* gradle/wrapper/
+          cp temp_gradle/gradle-4.2.2/gradlew .
+          cp temp_gradle/gradle-4.2.2/gradlew.bat .
+          
+          # 清理临时文件
+          rm -rf temp_gradle
+          rm gradle.zip
+          
+          echo "设置正确的权限"
+          chmod +x ./gradlew
+          ls -la ./gradlew
+          file ./gradlew
       - name: Check Project Structure
         script: |
           echo "=== Project Root ==="
@@ -194,8 +224,8 @@ workflows:
           echo "Checking Android plugin version in build.gradle"
           cat build.gradle | grep "com.android.tools.build:gradle"
           
-          # 使用系统提供的Gradle版本构建
-          echo "Building with latest Gradle..."
+          # 使用指定的Gradle版本构建
+          echo "Building with Gradle 4.2.2..."
           ./gradlew clean assembleDebug --stacktrace --info --no-daemon
           
           # 检查APK是否生成
