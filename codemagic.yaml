@@ -12,27 +12,38 @@ workflows:
         script: |
           echo "Checking if Gradle wrapper exists"
           if [ ! -f ./gradlew ] || [ ! -d ./gradle ]; then
-            echo "Creating new Gradle wrapper"
+            echo "Creating new Gradle wrapper from scratch"
             mkdir -p gradle/wrapper
             
-            echo "Downloading Gradle Wrapper JAR"
-            curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradle/wrapper/gradle-wrapper.jar
+            echo "Downloading Gradle distribution"
+            # 下载Gradle二进制发行版
+            curl -L -o gradle.zip "https://services.gradle.org/distributions/gradle-7.0.2-bin.zip"
             
-            echo "Creating gradle-wrapper.properties"
-            echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
-            echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-            echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.0.2-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
-            echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
-            echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+            echo "Extracting Gradle to create proper wrapper"
+            # 创建临时目录解压Gradle
+            mkdir -p temp_gradle
+            unzip -q gradle.zip -d temp_gradle
             
-            echo "Creating gradlew script"
-            curl -L -o gradlew https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradlew
+            # 使用解压出的Gradle来生成包装器文件
+            cd temp_gradle/gradle-7.0.2
+            ./bin/gradle wrapper --gradle-version 7.0.2
             
-            echo "Making gradlew executable"
+            # 复制生成的包装器文件到项目目录
+            cd ../..
+            cp -r temp_gradle/gradle-7.0.2/gradle/wrapper/* gradle/wrapper/
+            cp temp_gradle/gradle-7.0.2/gradlew .
+            
+            # 清理临时文件
+            rm -rf temp_gradle
+            rm gradle.zip
+            
+            echo "Setting proper permissions"
             chmod +x ./gradlew
+            ls -la ./gradlew
           else
-            echo "Gradle wrapper already exists"
+            echo "Gradle wrapper already exists, ensuring proper permissions"
             chmod +x ./gradlew
+            ls -la ./gradlew
           fi
       - name: Check Project Structure
         script: |
@@ -174,11 +185,29 @@ workflows:
       - name: Build debug APK
         script: |
           echo "Attempting build with logging"
-          ./gradlew clean
-          ./gradlew assembleDebug --stacktrace --info
+          # 检查gradlew权限和格式
+          file ./gradlew
+          chmod +x ./gradlew
+          ls -la ./gradlew
+          
+          # 使用全路径调用gradlew
+          GRADLE_USER_HOME="$CM_BUILD_DIR/.gradle"
+          echo "Using GRADLE_USER_HOME=$GRADLE_USER_HOME"
+          
+          # 先尝试使用Gradle直接构建而不是包装器
+          echo "Trying direct build with Gradle..."
+          GRADLE_BIN=$(which gradle)
+          if [ -n "$GRADLE_BIN" ]; then
+            $GRADLE_BIN clean
+            $GRADLE_BIN assembleDebug --stacktrace --info
+          else
+            echo "Gradle not found, using wrapper..."
+            ./gradlew clean
+            ./gradlew assembleDebug --stacktrace --info
+          fi
           
           # Show build reports
           echo "===== BUILD REPORTS ====="
-          find app/build/reports -name "*.html" -exec cat {} \;
+          find app/build/reports -name "*.html" -exec cat {} \; || echo "No build reports found."
     artifacts:
       - app/build/outputs/apk/debug/*.apk
