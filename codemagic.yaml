@@ -120,62 +120,58 @@ workflows:
             done
           fi
           
+          # 使用临时文件来保存XML内容，避免YAML解析问题
+          
           # Check if styles.xml exists, create if not
           if [ ! -f app/src/main/res/values/styles.xml ]; then
             echo "Creating styles.xml"
-            cat > app/src/main/res/values/styles.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Theme.VideoTimeTracker" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
-</resources>
-EOF
+            echo '<?xml version="1.0" encoding="utf-8"?>' > app/src/main/res/values/styles.xml
+            echo '<resources>' >> app/src/main/res/values/styles.xml
+            echo '    <style name="Theme.VideoTimeTracker" parent="Theme.AppCompat.Light.DarkActionBar">' >> app/src/main/res/values/styles.xml
+            echo '        <item name="colorPrimary">@color/colorPrimary</item>' >> app/src/main/res/values/styles.xml
+            echo '        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>' >> app/src/main/res/values/styles.xml
+            echo '        <item name="colorAccent">@color/colorAccent</item>' >> app/src/main/res/values/styles.xml
+            echo '    </style>' >> app/src/main/res/values/styles.xml
+            echo '</resources>' >> app/src/main/res/values/styles.xml
           fi
           
           # Check if colors.xml exists, create if not
           if [ ! -f app/src/main/res/values/colors.xml ]; then
             echo "Creating colors.xml"
-            cat > app/src/main/res/values/colors.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
-</resources>
-EOF
+            echo '<?xml version="1.0" encoding="utf-8"?>' > app/src/main/res/values/colors.xml
+            echo '<resources>' >> app/src/main/res/values/colors.xml
+            echo '    <color name="colorPrimary">#6200EE</color>' >> app/src/main/res/values/colors.xml
+            echo '    <color name="colorPrimaryDark">#3700B3</color>' >> app/src/main/res/values/colors.xml
+            echo '    <color name="colorAccent">#03DAC5</color>' >> app/src/main/res/values/colors.xml
+            echo '    <color name="white">#FFFFFF</color>' >> app/src/main/res/values/colors.xml
+            echo '    <color name="black">#000000</color>' >> app/src/main/res/values/colors.xml
+            echo '</resources>' >> app/src/main/res/values/colors.xml
           fi
           
           # Check if strings.xml exists, create if not
           if [ ! -f app/src/main/res/values/strings.xml ]; then
             echo "Creating strings.xml"
-            cat > app/src/main/res/values/strings.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">短视频使用时长监控</string>
-    <string name="permission_required">需要使用情况访问权限</string>
-    <string name="permission_explanation">此应用需要访问使用情况权限来监控短视频应用的使用时长，请在设置中授予此权限。</string>
-    <string name="go_to_settings">前往设置</string>
-    <string name="permission_denied">权限被拒绝，应用功能将受限</string>
-    <string name="daily_usage">今日使用时长</string>
-    <string name="daily_limit">每日限制</string>
-    <string name="app_usage">应用使用情况</string>
-    <string name="set_time_limit">设置时间限制</string>
-    <string name="hours">小时</string>
-    <string name="save_settings">保存设置</string>
-    <string name="reset_stats">重置统计数据</string>
-    <string name="home">首页</string>
-    <string name="stats">统计</string>
-    <string name="settings">设置</string>
-    <string name="time_limit_saved">设置已保存</string>
-    <string name="invalid_time_limit">请输入有效的时间限制</string>
-    <string name="confirm_reset">确定要重置所有统计数据吗？</string>
-</resources>
-EOF
+            echo '<?xml version="1.0" encoding="utf-8"?>' > app/src/main/res/values/strings.xml
+            echo '<resources>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="app_name">短视频使用时长监控</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="permission_required">需要使用情况访问权限</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="permission_explanation">此应用需要访问使用情况权限来监控短视频应用的使用时长，请在设置中授予此权限。</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="go_to_settings">前往设置</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="permission_denied">权限被拒绝，应用功能将受限</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="daily_usage">今日使用时长</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="daily_limit">每日限制</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="app_usage">应用使用情况</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="set_time_limit">设置时间限制</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="hours">小时</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="save_settings">保存设置</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="reset_stats">重置统计数据</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="home">首页</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="stats">统计</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="settings">设置</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="time_limit_saved">设置已保存</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="invalid_time_limit">请输入有效的时间限制</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="confirm_reset">确定要重置所有统计数据吗？</string>' >> app/src/main/res/values/strings.xml
+            echo '</resources>' >> app/src/main/res/values/strings.xml
           fi
       - name: Build debug APK
         script: |
