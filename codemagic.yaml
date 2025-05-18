@@ -123,7 +123,7 @@ workflows:
           # Check if styles.xml exists, create if not
           if [ ! -f app/src/main/res/values/styles.xml ]; then
             echo "Creating styles.xml"
-            cat > app/src/main/res/values/styles.xml << EOF
+            cat > app/src/main/res/values/styles.xml << 'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.VideoTimeTracker" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -138,7 +138,7 @@ EOF
           # Check if colors.xml exists, create if not
           if [ ! -f app/src/main/res/values/colors.xml ]; then
             echo "Creating colors.xml"
-            cat > app/src/main/res/values/colors.xml << EOF
+            cat > app/src/main/res/values/colors.xml << 'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#6200EE</color>
@@ -153,7 +153,7 @@ EOF
           # Check if strings.xml exists, create if not
           if [ ! -f app/src/main/res/values/strings.xml ]; then
             echo "Creating strings.xml"
-            cat > app/src/main/res/values/strings.xml << EOF
+            cat > app/src/main/res/values/strings.xml << 'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">短视频使用时长监控</string>
