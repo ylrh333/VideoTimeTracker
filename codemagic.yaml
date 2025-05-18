@@ -46,6 +46,15 @@ workflows:
           echo "=== App Directory ==="
           ls -la app/
           
+          echo "=== Src Directory ==="
+          ls -la app/src/
+          
+          echo "=== Main Directory ==="
+          ls -la app/src/main/
+          
+          echo "=== Java Directory ==="
+          ls -la app/src/main/java/
+          
           echo "=== Build Gradle ==="
           cat build.gradle
           
@@ -54,9 +63,47 @@ workflows:
           
           echo "=== Settings Gradle ==="
           cat settings.gradle
+          
+          echo "=== AndroidManifest.xml ==="
+          cat app/src/main/AndroidManifest.xml
+      - name: Fix app structure if needed
+        script: |
+          # Ensure required directories exist
+          mkdir -p app/src/main/java/com/example/videotimetracker
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+          
+          # Check if manifest exists, create if not
+          if [ ! -f app/src/main/AndroidManifest.xml ]; then
+            echo "Creating minimal AndroidManifest.xml"
+            cat > app/src/main/AndroidManifest.xml << EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.example.videotimetracker">
+              <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+              <application
+                  android:allowBackup="true"
+                  android:label="VideoTimeTracker"
+                  android:supportsRtl="true">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+          fi
       - name: Build debug APK
         script: |
-          echo "Attempting build with full verbosity"
-          ./gradlew assembleDebug --stacktrace --info --debug --scan
+          echo "Attempting build with logging"
+          # Try to build with a clean first
+          ./gradlew clean
+          ./gradlew assembleDebug --stacktrace --info || true
+          
+          # Show build reports
+          echo "===== BUILD REPORTS ====="
+          find app/build/reports -name "*.html" -exec cat {} \;
     artifacts:
       - app/build/outputs/apk/debug/*.apk 
