@@ -4,26 +4,26 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      java: 11  # 使用Java 11，与Android工具链更兼容
+      java: 11  # Use Java 11 for better compatibility with Android toolchain
       android_sdk: 30.0.3
     scripts:
       - name: Set up local properties
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
       - name: Install and use Gradle directly
         script: |
-          echo "===== 安装独立的Gradle 4.2.2 ====="
-          # 下载Gradle并解压到工作目录
+          echo "===== Installing standalone Gradle 4.2.2 ====="
+          # Download Gradle and extract to working directory
           curl -L -o gradle-4.2.2-bin.zip "https://services.gradle.org/distributions/gradle-4.2.2-bin.zip"
           unzip -q gradle-4.2.2-bin.zip
           
-          # 设置环境变量
+          # Set environment variables
           GRADLE_HOME="$PWD/gradle-4.2.2"
           PATH="$GRADLE_HOME/bin:$PATH"
           
-          # 验证安装
+          # Verify installation
           gradle -v
           
-          echo "===== Gradle安装完成 ====="
+          echo "===== Gradle installation complete ====="
       - name: Check Project Structure
         script: |
           echo "=== Project Root ==="
@@ -108,7 +108,7 @@ workflows:
             done
           fi
           
-          # 使用临时文件来保存XML内容，避免YAML解析问题
+          # Use temp files to save XML content, avoid YAML parsing issues
           
           # Check if styles.xml exists, create if not
           if [ ! -f app/src/main/res/values/styles.xml ]; then
@@ -141,72 +141,72 @@ workflows:
             echo "Creating strings.xml"
             echo '<?xml version="1.0" encoding="utf-8"?>' > app/src/main/res/values/strings.xml
             echo '<resources>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="app_name">短视频使用时长监控</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="permission_required">需要使用情况访问权限</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="permission_explanation">此应用需要访问使用情况权限来监控短视频应用的使用时长，请在设置中授予此权限。</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="go_to_settings">前往设置</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="permission_denied">权限被拒绝，应用功能将受限</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="daily_usage">今日使用时长</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="daily_limit">每日限制</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="app_usage">应用使用情况</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="set_time_limit">设置时间限制</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="hours">小时</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="save_settings">保存设置</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="reset_stats">重置统计数据</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="home">首页</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="stats">统计</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="settings">设置</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="time_limit_saved">设置已保存</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="invalid_time_limit">请输入有效的时间限制</string>' >> app/src/main/res/values/strings.xml
-            echo '    <string name="confirm_reset">确定要重置所有统计数据吗？</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="app_name">Video Time Monitor</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="permission_required">Usage Access Permission Required</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="permission_explanation">This app needs usage access permission to monitor video app usage time, please grant it in settings.</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="go_to_settings">Go to Settings</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="permission_denied">Permission denied, app functionality will be limited</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="daily_usage">Today\'s Usage</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="daily_limit">Daily Limit</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="app_usage">App Usage</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="set_time_limit">Set Time Limit</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="hours">Hours</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="save_settings">Save Settings</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="reset_stats">Reset Statistics</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="home">Home</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="stats">Statistics</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="settings">Settings</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="time_limit_saved">Settings Saved</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="invalid_time_limit">Please enter a valid time limit</string>' >> app/src/main/res/values/strings.xml
+            echo '    <string name="confirm_reset">Are you sure you want to reset all statistics?</string>' >> app/src/main/res/values/strings.xml
             echo '</resources>' >> app/src/main/res/values/strings.xml
           fi
       - name: Build debug APK
         script: |
-          echo "===== 开始构建APK ====="
-          # 配置Gradle环境变量
+          echo "===== Starting APK Build ====="
+          # Configure Gradle environment variables
           GRADLE_HOME="$PWD/gradle-4.2.2"
           PATH="$GRADLE_HOME/bin:$PATH"
           GRADLE_USER_HOME="$CM_BUILD_DIR/.gradle"
           export GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
           
-          echo "使用Gradle版本:"
+          echo "Using Gradle version:"
           gradle -v
           
-          echo "构建环境:"
+          echo "Build environment:"
           echo "GRADLE_HOME=$GRADLE_HOME"
           echo "PATH=$PATH"
           echo "GRADLE_USER_HOME=$GRADLE_USER_HOME"
           echo "GRADLE_OPTS=$GRADLE_OPTS"
           
-          # 检查build.gradle中的Android插件版本
-          echo "检查Android插件版本"
+          # Check Android plugin version in build.gradle
+          echo "Checking Android plugin version"
           cat build.gradle | grep "com.android.tools.build:gradle"
           
-          echo "执行构建命令"
+          echo "Executing build command"
           gradle clean assembleDebug --info --stacktrace
           
-          echo "构建完成，检查生成的APK"
+          echo "Build complete, checking generated APK"
           find . -name "*.apk"
       - name: List artifacts for debugging
         script: |
-          echo "===== 查找所有潜在构建产物 ====="
+          echo "===== Finding all potential artifacts ====="
           find . -name "*.apk"
           
-          # 确保输出目录存在
+          # Ensure output directory exists
           mkdir -p app/build/outputs/apk/debug
           
-          # 如果找到了APK但不在正确位置，复制到正确位置
+          # If APKs found but not in correct location, copy to correct location
           APK_FILES=$(find . -name "*.apk")
           if [ -n "$APK_FILES" ]; then
             for apk in $APK_FILES; do
-              echo "找到APK: $apk"
+              echo "Found APK: $apk"
               cp $apk app/build/outputs/apk/debug/
             done
           else
-            echo "在构建输出中未找到APK文件。"
-            # 显示更多调试信息
-            echo "===== 构建目录内容 ====="
+            echo "No APK files found in build output."
+            # Show more debug info
+            echo "===== Build directory contents ====="
             find . -type d -name "build" | xargs ls -la
           fi
     artifacts:
