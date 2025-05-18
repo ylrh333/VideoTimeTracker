@@ -5,6 +5,7 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       java: 11
+      gradle: 4.2.2  # 指定使用与项目兼容的Gradle版本
     scripts:
       - name: Set up local properties
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
@@ -16,8 +17,8 @@ workflows:
             mkdir -p gradle/wrapper
             
             echo "Downloading Gradle distribution"
-            # 下载Gradle二进制发行版
-            curl -L -o gradle.zip "https://services.gradle.org/distributions/gradle-7.0.2-bin.zip"
+            # 下载与项目兼容的Gradle版本4.2.2
+            curl -L -o gradle.zip "https://services.gradle.org/distributions/gradle-4.2.2-bin.zip"
             
             echo "Extracting Gradle to create proper wrapper"
             # 创建临时目录解压Gradle
@@ -25,13 +26,13 @@ workflows:
             unzip -q gradle.zip -d temp_gradle
             
             # 使用解压出的Gradle来生成包装器文件
-            cd temp_gradle/gradle-7.0.2
-            ./bin/gradle wrapper --gradle-version 7.0.2
+            cd temp_gradle/gradle-4.2.2
+            ./bin/gradle wrapper --gradle-version 4.2.2
             
             # 复制生成的包装器文件到项目目录
             cd ../..
-            cp -r temp_gradle/gradle-7.0.2/gradle/wrapper/* gradle/wrapper/
-            cp temp_gradle/gradle-7.0.2/gradlew .
+            cp -r temp_gradle/gradle-4.2.2/gradle/wrapper/* gradle/wrapper/
+            cp temp_gradle/gradle-4.2.2/gradlew .
             
             # 清理临时文件
             rm -rf temp_gradle
@@ -192,22 +193,41 @@ workflows:
           
           # 使用全路径调用gradlew
           GRADLE_USER_HOME="$CM_BUILD_DIR/.gradle"
-          echo "Using GRADLE_USER_HOME=$GRADLE_USER_HOME"
+          export GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
+          echo "Using GRADLE_USER_HOME=$GRADLE_USER_HOME with GRADLE_OPTS=$GRADLE_OPTS"
           
-          # 先尝试使用Gradle直接构建而不是包装器
-          echo "Trying direct build with Gradle..."
-          GRADLE_BIN=$(which gradle)
-          if [ -n "$GRADLE_BIN" ]; then
-            $GRADLE_BIN clean
-            $GRADLE_BIN assembleDebug --stacktrace --info
-          else
-            echo "Gradle not found, using wrapper..."
-            ./gradlew clean
-            ./gradlew assembleDebug --stacktrace --info
-          fi
+          # 先检查build.gradle中的Android插件版本
+          echo "Checking Android plugin version in build.gradle"
+          cat build.gradle | grep "com.android.tools.build:gradle"
+          
+          # 使用指定的Gradle版本构建
+          echo "Building with Gradle 4.2.2..."
+          ./gradlew clean assembleDebug --stacktrace --info --no-daemon
+          
+          # 检查APK是否生成
+          echo "Checking for generated APK..."
+          find app/build/outputs -name "*.apk"
           
           # Show build reports
           echo "===== BUILD REPORTS ====="
           find app/build/reports -name "*.html" -exec cat {} \; || echo "No build reports found."
+      - name: List artifacts for debugging
+        script: |
+          echo "===== Listing all potential artifacts ====="
+          find . -name "*.apk"
+          
+          # 确保输出目录存在
+          mkdir -p app/build/outputs/apk/debug
+          
+          # 如果找到了APK但不在正确位置，复制到正确位置
+          APK_FILES=$(find . -name "*.apk")
+          if [ -n "$APK_FILES" ]; then
+            for apk in $APK_FILES; do
+              echo "Found APK: $apk"
+              cp $apk app/build/outputs/apk/debug/
+            done
+          else
+            echo "No APK files found in the build output."
+          fi
     artifacts:
-      - app/build/outputs/apk/debug/*.apk
+      - app/build/outputs/**/*.apk
