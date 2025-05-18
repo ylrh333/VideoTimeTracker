@@ -5,7 +5,6 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       java: 11  # Use Java 11 for better compatibility with Android toolchain
-      android_sdk: 30.0.3
     scripts:
       - name: Set up local properties
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
@@ -208,6 +207,5 @@ workflows:
             # Show more debug info
             echo "===== Build directory contents ====="
             find . -type d -name "build" | xargs ls -la
-          fi
     artifacts:
       - app/build/outputs/**/*.apk
