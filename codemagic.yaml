@@ -8,20 +8,36 @@ workflows:
     scripts:
       - name: Set up local properties
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
-      - name: Add execution permission to gradlew
-        script: chmod +x ./gradlew
-      - name: Check Gradle Files
+      - name: Create complete Gradle Wrapper
         script: |
-          echo "Listing gradle folder content:"
-          ls -la ./gradle/wrapper/
-          echo "Checking gradle-wrapper.jar file size:"
-          stat -f "%z" ./gradle/wrapper/gradle-wrapper.jar
-      - name: Use Codemagic Gradle
-        script: |
-          echo "Creating Gradle wrapper directory if not exists"
+          echo "Removing existing Gradle wrapper files"
+          rm -f ./gradlew
+          rm -rf ./gradle
+          
+          echo "Creating new Gradle wrapper"
           mkdir -p gradle/wrapper
-          echo "Downloading Gradle Wrapper 7.0.2"
+          
+          echo "Downloading Gradle Wrapper JAR"
           curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradle/wrapper/gradle-wrapper.jar
+          
+          echo "Creating gradle-wrapper.properties"
+          cat > gradle/wrapper/gradle-wrapper.properties << EOF
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-7.0.2-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+          
+          echo "Creating gradlew script"
+          curl -L -o gradlew https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradlew
+          
+          echo "Making gradlew executable"
+          chmod +x ./gradlew
+          
+          echo "Listing files"
+          ls -la
+          ls -la gradle/wrapper/
       - name: Build debug APK
         script: |
           ./gradlew assembleDebug --stacktrace --info
