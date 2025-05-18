@@ -10,8 +10,20 @@ workflows:
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
       - name: Add execution permission to gradlew
         script: chmod +x ./gradlew
+      - name: Check Gradle Files
+        script: |
+          echo "Listing gradle folder content:"
+          ls -la ./gradle/wrapper/
+          echo "Checking gradle-wrapper.jar file size:"
+          stat -f "%z" ./gradle/wrapper/gradle-wrapper.jar
+      - name: Use Codemagic Gradle
+        script: |
+          echo "Creating Gradle wrapper directory if not exists"
+          mkdir -p gradle/wrapper
+          echo "Downloading Gradle Wrapper 7.0.2"
+          curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v7.0.2/gradle/wrapper/gradle-wrapper.jar
       - name: Build debug APK
         script: |
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace --info
     artifacts:
       - app/build/outputs/apk/debug/*.apk 
