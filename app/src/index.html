@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短视频使用时长监控</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #212529;
+            padding: 20px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            color: #343a40;
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-title {
+            font-size: 1rem;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .app-usage {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .app-usage:last-child {
+            border-bottom: none;
+        }
+        .app-name {
+            display: flex;
+            align-items: center;
+        }
+        .app-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin-right: 10px;
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .app-time {
+            font-weight: bold;
+        }
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            margin: 5px 0 15px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+            border-radius: 5px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+        }
+        .tab.active {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        .time-limit {
+            margin: 20px 0;
+        }
+        .time-input {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .time-input input {
+            flex: 1;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>短视频使用时长监控</h1>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">今日使用时长</div>
+        <div class="stat-value" id="today-usage">2小时15分钟</div>
+        <div class="progress-bar">
+            <div class="progress" style="width: 75%"></div>
+        </div>
+        <div style="text-align: right; font-size: 0.8rem; color: #6c757d;">每日限制: 3小时</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">应用使用情况</div>
+        
+        <div class="app-usage">
+            <div class="app-name">
+                <div class="app-icon">抖</div>
+                抖音
+            </div>
+            <div class="app-time">1小时35分钟</div>
+        </div>
+        
+        <div class="app-usage">
+            <div class="app-name">
+                <div class="app-icon">快</div>
+                快手
+            </div>
+            <div class="app-time">40分钟</div>
+        </div>
+        
+        <div class="app-usage">
+            <div class="app-name">
+                <div class="app-icon">B</div>
+                哔哩哔哩
+            </div>
+            <div class="app-time">0分钟</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">设置时间限制</div>
+        <div class="time-limit">
+            <label for="limit">每日使用限制：</label>
+            <div class="time-input">
+                <input type="number" id="limit" value="3" min="0">
+                <span style="line-height: 40px;">小时</span>
+            </div>
+        </div>
+        <button class="btn" id="save-limit">保存设置</button>
+    </div>
+
+    <button class="btn btn-danger" id="reset-stats">重置统计数据</button>
+
+    <div style="height: 70px;"></div>
+
+    <div class="tab-bar">
+        <div class="tab active">首页</div>
+        <div class="tab">统计</div>
+        <div class="tab">设置</div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 

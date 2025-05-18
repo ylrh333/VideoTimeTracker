@@ -1,0 +1,13 @@
+# Android项目通用.gitignore
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+local.properties 
