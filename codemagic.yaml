@@ -4,72 +4,26 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      java: 17
+      java: 11  # 使用Java 11，与Android工具链更兼容
+      android_sdk: 30.0.3
     scripts:
       - name: Set up local properties
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
-      - name: Fix Gradle Wrapper for Mac OS
+      - name: Install and use Gradle directly
         script: |
-          echo "检查并修复Gradle包装器格式问题"
-          # 检查gradlew文件编码和格式
-          file ./gradlew
+          echo "===== 安装独立的Gradle 4.2.2 ====="
+          # 下载Gradle并解压到工作目录
+          curl -L -o gradle-4.2.2-bin.zip "https://services.gradle.org/distributions/gradle-4.2.2-bin.zip"
+          unzip -q gradle-4.2.2-bin.zip
           
-          # 如果gradlew文件存在但无法执行，则创建新的Unix格式版本
-          if [ -f ./gradlew ]; then
-            echo "检测到现有gradlew文件，转换为Unix格式"
-            # 将文件内容转换为ASCII/UTF-8格式，并使用LF作为行结束符
-            tr -d '\r' < ./gradlew > ./gradlew.unix
-            mv ./gradlew.unix ./gradlew
-            chmod +x ./gradlew
-            
-            # 验证文件格式
-            file ./gradlew
-            ls -la ./gradlew
-          else
-            echo "未找到gradlew文件，需要下载完整的Gradle"
-          fi
-      - name: Create complete Gradle Wrapper
-        script: |
-          echo "确保Gradle包装器正确创建"
+          # 设置环境变量
+          GRADLE_HOME="$PWD/gradle-4.2.2"
+          PATH="$GRADLE_HOME/bin:$PATH"
           
-          # 无论现有文件如何，都下载完整的Gradle发行版并创建新的包装器
-          echo "下载完整的Gradle发行版"
-          curl -L -o gradle.zip "https://services.gradle.org/distributions/gradle-4.2.2-bin.zip"
+          # 验证安装
+          gradle -v
           
-          echo "解压Gradle并创建包装器"
-          mkdir -p temp_gradle
-          unzip -q gradle.zip -d temp_gradle
-          
-          # 在macOS上使用绝对路径
-          GRADLE_BIN_PATH="$PWD/temp_gradle/gradle-4.2.2/bin/gradle"
-          chmod +x $GRADLE_BIN_PATH
-          
-          # 确保bin目录中的所有文件都可执行
-          chmod -R +x temp_gradle/gradle-4.2.2/bin
-          
-          echo "使用下载的Gradle版本生成包装器"
-          cd temp_gradle/gradle-4.2.2
-          ./bin/gradle wrapper --gradle-version 4.2.2
-          
-          echo "复制生成的包装器到项目目录"
-          cd ../../
-          rm -f ./gradlew
-          rm -f ./gradlew.bat
-          rm -rf ./gradle
-          
-          mkdir -p gradle/wrapper
-          cp -r temp_gradle/gradle-4.2.2/gradle/wrapper/* gradle/wrapper/
-          cp temp_gradle/gradle-4.2.2/gradlew .
-          cp temp_gradle/gradle-4.2.2/gradlew.bat .
-          
-          # 清理临时文件
-          rm -rf temp_gradle
-          rm gradle.zip
-          
-          echo "设置正确的权限"
-          chmod +x ./gradlew
-          ls -la ./gradlew
-          file ./gradlew
+          echo "===== Gradle安装完成 ====="
       - name: Check Project Structure
         script: |
           echo "=== Project Root ==="
@@ -88,16 +42,16 @@ workflows:
           ls -la app/src/main/java/
           
           echo "=== Build Gradle ==="
-          cat build.gradle
+          cat build.gradle || echo "build.gradle not found"
           
           echo "=== App Build Gradle ==="
-          cat app/build.gradle
+          cat app/build.gradle || echo "app/build.gradle not found"
           
           echo "=== Settings Gradle ==="
-          cat settings.gradle
+          cat settings.gradle || echo "settings.gradle not found"
           
           echo "=== AndroidManifest.xml ==="
-          cat app/src/main/AndroidManifest.xml
+          cat app/src/main/AndroidManifest.xml || echo "AndroidManifest.xml not found"
       - name: Fix app structure if needed
         script: |
           # Clean up any misplaced files in src directory
@@ -209,35 +163,34 @@ workflows:
           fi
       - name: Build debug APK
         script: |
-          echo "Attempting build with logging"
-          # 检查gradlew权限和格式
-          file ./gradlew
-          chmod +x ./gradlew
-          ls -la ./gradlew
-          
-          # 使用全路径调用gradlew
+          echo "===== 开始构建APK ====="
+          # 配置Gradle环境变量
+          GRADLE_HOME="$PWD/gradle-4.2.2"
+          PATH="$GRADLE_HOME/bin:$PATH"
           GRADLE_USER_HOME="$CM_BUILD_DIR/.gradle"
           export GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
-          echo "Using GRADLE_USER_HOME=$GRADLE_USER_HOME with GRADLE_OPTS=$GRADLE_OPTS"
           
-          # 先检查build.gradle中的Android插件版本
-          echo "Checking Android plugin version in build.gradle"
+          echo "使用Gradle版本:"
+          gradle -v
+          
+          echo "构建环境:"
+          echo "GRADLE_HOME=$GRADLE_HOME"
+          echo "PATH=$PATH"
+          echo "GRADLE_USER_HOME=$GRADLE_USER_HOME"
+          echo "GRADLE_OPTS=$GRADLE_OPTS"
+          
+          # 检查build.gradle中的Android插件版本
+          echo "检查Android插件版本"
           cat build.gradle | grep "com.android.tools.build:gradle"
           
-          # 使用指定的Gradle版本构建
-          echo "Building with Gradle 4.2.2..."
-          ./gradlew clean assembleDebug --stacktrace --info --no-daemon
+          echo "执行构建命令"
+          gradle clean assembleDebug --info --stacktrace
           
-          # 检查APK是否生成
-          echo "Checking for generated APK..."
-          find app/build/outputs -name "*.apk"
-          
-          # Show build reports
-          echo "===== BUILD REPORTS ====="
-          find app/build/reports -name "*.html" -exec cat {} \; || echo "No build reports found."
+          echo "构建完成，检查生成的APK"
+          find . -name "*.apk"
       - name: List artifacts for debugging
         script: |
-          echo "===== Listing all potential artifacts ====="
+          echo "===== 查找所有潜在构建产物 ====="
           find . -name "*.apk"
           
           # 确保输出目录存在
@@ -247,11 +200,14 @@ workflows:
           APK_FILES=$(find . -name "*.apk")
           if [ -n "$APK_FILES" ]; then
             for apk in $APK_FILES; do
-              echo "Found APK: $apk"
+              echo "找到APK: $apk"
               cp $apk app/build/outputs/apk/debug/
             done
           else
-            echo "No APK files found in the build output."
+            echo "在构建输出中未找到APK文件。"
+            # 显示更多调试信息
+            echo "===== 构建目录内容 ====="
+            find . -type d -name "build" | xargs ls -la
           fi
     artifacts:
       - app/build/outputs/**/*.apk
